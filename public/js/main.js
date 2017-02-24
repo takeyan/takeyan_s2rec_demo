@@ -1086,6 +1086,45 @@ function synthesizeRequest(text, v) {
 
 // ------------------------------------------------------------------------------------
 
+//---------------Personality Insights---------------------
+
+        var image = 'https://personality-insights-livedemo.mybluemix.net/images/service-icon.svg';
+        var chart = new PersonalitySunburstChart({"selector": "#chartId", "version": "v3"});
+
+        $('#analyzeId').on('click', function () {
+            var resultId = $('#resultId');
+            var statusId = $('#statusId');
+            var text = $('#resultsText').val();
+            if (text.length >= 1) {  // テストのため変更120->1 S.T.
+                statusId.html('<p class="text-info">分析中です (遅いな？と思ったらNode-REDのdebugを確認してください。)・・・</p>');
+                $.ajax({
+                    "type": "POST",
+                    "url": "/pi-analyze",
+                    data: {"text": text}
+                }).done(function (value) {
+                    chart.show(value, image);
+                    statusId.append('<p class="text-info">・・・完了しました。</p>');
+                }).fail(function (value) {
+                    statusId.append('<p class="text-danger">・・・エラーが発生しました。</p>');
+                }).always(function (value) {
+                    resultId.html('<pre>' + JSON.stringify(value, undefined, 2) + '</pre>');
+                });
+            } else {
+                statusId.html('<p class="text-danger">分析には最低限100語必要です。統計的に有意な推定値を計算するには最低600語、1,200語以上が望ましいです。</p>');
+                resultId.html('');
+            }
+            return false;
+        });
+
+//--------------------------------------------------------------
+
+
+
+
+
+
+
+
 var initScroll = function() {
   $('.table-scroll').on('scroll', function(){
       scrolled=true;

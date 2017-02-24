@@ -26,6 +26,15 @@ var express = require('express'),
     // environmental variable points to demo's json config file
     extend = require('util')._extend;
 
+//------Personality Insights------------
+var PersonalityInsightsV3 = require('watson-developer-cloud/personality-insights/v3');
+var personality_insights = new PersonalityInsightsV3({
+   username: '8e6e7927-3343-491b-9932-81a81835f4a5',
+   password: 'XgTNfJyoEkIt',
+   version_date: '2016-10-20'
+});
+//----------------------------------------------
+
 // For local development, put username and password in config
 // or store in your environment
 var config = {
@@ -65,6 +74,51 @@ app.get('/token', function(req, res) {
     res.send(token);
   });
 });
+
+//-----------Personality Insights----------------------------
+
+app.post('/pi-analyze', function(req, res) {
+ 
+console.log("### Input BODY is: " + JSON.stringify(req.body));
+console.log("### Input Text is: " + req.body.text);
+
+var contentItems = Array();
+contentItems[0] = {
+   "content": req.body.text, 
+   "contenttype": "text/plain", 
+   "created": 1447639154000,
+   "id": "666073008692314113",
+   "language": "ja"
+ };
+
+var params = {
+  // Get the content items from the JSON file.
+  content_items: contentItems,
+  consumption_preferences: true,
+  raw_scores: true,
+  headers: {
+    'accept-language': 'ja',
+    'accept': 'application/json'
+  }
+};
+
+personality_insights.profile(params, function(error, response) {
+  if (error)
+    console.log('Error:', error);
+  else
+    console.log(JSON.stringify(response, null, 2));
+       res.header("Content-Type", "application/json; charset=utf-8");
+       res.send(response);
+  }
+);
+});
+
+//-------------------------------------------------------------------
+
+
+
+
+
 
 // L.R.
 // ------------------------------- MT ---------------------------------

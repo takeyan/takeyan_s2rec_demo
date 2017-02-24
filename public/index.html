@@ -29,7 +29,7 @@
 					<br>
 					<a href="http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/">Built with IBM Watson</a>
 					 |
-					<a href="http://www.ibm.com/privacy/us/en/">Terms and Privacy Policy</a>
+					<a href="http://www.ibm.com/privacy/us/en/">Terms and Pmkkkkkkkkkkkrivacy Policy</a>
 					 | 
 					<a href="https://github.com/leonrch/SpeechToSpeech">Fork me on Github</a> 
 					</p>
@@ -185,7 +185,25 @@
 
 	  </div><!-- /.container -->
 
-      </div>		  
+      </div>
+
+<div class="container-fluid">
+    <h1>Node-RED Personality Insights サンプル</h1>
+    <div style="margin: 5px 0">
+        <button class="btn btn-primary btn-block" id="analyzeId">分析する</button>
+    </div>
+    <div id="statusId"></div>
+    <ul class="nav nav-tabs nav-justified">
+        <li class="active"><a href="#chartId" data-toggle="tab">Chart</a></li>
+        <li><a href="#resultId" data-toggle="tab">JSON</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane in active" id="chartId"></div>
+        <div class="tab-pane" id="resultId"></div>
+    </div>
+</div>
+
+
       <!-- for file upload dialog in toolbar -->
       <input style="display:none" type="file" id="fileUploadDialog">
 
@@ -194,6 +212,11 @@
       <script>window.jQuery || document.write('<script src="js/jquery-1.11.3.min.js"><\/script>')</script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
       <script> (typeof $().emulateTransitionEnd == 'function')|| document.write('<script src="js/bootstrap-3.3.5.min.js"><\/script>')</script>
+ 
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+ <script src="https://unpkg.com/personality-sunburst-chart@2.0.4/dist/index.js"></script>
+ <script src="https://d3js.org/d3-color.v1.min.js"></script>
+
       <script src="js/main.js"></script>
 
   </body>
