@@ -10,7 +10,7 @@ declared-services:
     label: text_to_speech
     plan: standard	
 applications:
-- name: speech-to-speech-app
+- name: takeyang-s2s
   command: node app.js
   buildpack: sdk-for-nodejs
   path: .

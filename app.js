@@ -71,28 +71,45 @@ app.get('/token', function(req, res) {
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var mt_credentials = extend({
-  url: 'https://gateway.watsonplatform.net/language-translation/api',
+  url: 'https://gateway.watsonplatform.net/language-translator/api', // S.T. 新Language Translator対応
   username: 'user name to access MT service',
   password: 'password to access MT service',
   version: 'v2'
-}, bluemix.getServiceCreds('language-translation')); // VCAP_SERVICES
+}, bluemix.getServiceCreds('language_translator')); // VCAP_SERVICES  // S.T. 新Language Translator対応
+
+// console.log('##### bluemix.getServiceCreds=' + bluemix.getServiceCreds('language_translator'));
 
 var language_translation = watson.language_translation(mt_credentials);
+// console.log("##### var language_translation = watson.language_translator(mt_credentials)");
+
+
 
 app.post('/api/translate', function(req, res, next) {
-  //console.log('/v2/translate');
+ // console.log('/v2/translate');
   
   var params = extend({ 'X-WDC-PL-OPT-OUT': req.header('X-WDC-PL-OPT-OUT')}, req.body);
-  //console.log(' ---> params == ' + JSON.stringify(params)); //L.R.
-  
-  language_translation.translate(params, function(err, models) {
-  if (err)
+ 
+  // 旧Lnaguage Translationの引数のparamsオブジェクトは、params.textに翻訳への入力文、params.model_idに"en-fr-conversational"の
+  // ように翻訳方法がセットされている。
+  // Language Translatorは、text: params.text,    source: 'ja',    target: 'en' という形式のJSONオブジェクトを引数とするので、
+  // 翻訳方法の部分はmodel_idから先頭2バイトを抽出してsourceにセット、最初のハイフン直後の2バイト（オフセット3からオフセット5の手前まで）
+  // を抽出してtargetにセットして使用する。
+  var src = params.model_id.substring(0,2);         // S.T. 新Language Translator対応
+  var tgt = params.model_id.substring(3,5);          // S.T. 新Language Translator対応
+  var params2 = {    text: params.text,    source: src,    target: tgt };         // S.T. 新Language Translator対応
+  //  console.log('##### ---> params2 == ' + JSON.stringify(params2)); //S.T
+
+  language_translation.translate(params2, function(err, models) {
+  if (err) {
+ console.log('##### err:'+err); //S.T
     return next(err);
-  else
+ } else {
+// console.log('##### models:'+JSON.stringify(models)); //S.T
     res.json(models);
+}    
   });
 });
-// ----------------------------------------------------------------------
+
 
 // L.R.
 // -------------------------------- TTS ---------------------------------

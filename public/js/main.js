@@ -302,13 +302,13 @@ module.exports={
       //   "language": "es-ES", 
       //   "description": "Spanish narrowband model (8KHz)"
       //}, 
-      //{
-      //   "url": "https://stream.watsonplatform.net/speech-to-text/api/v1/models/ja-JP_BroadbandModel", 
-      //   "rate": 16000, 
-      //   "name": "ja-JP_BroadbandModel", 
-      //   "language": "ja-JP", 
-      //   "description": "Japanese broadband model (16KHz)"
-      //}, 
+      {
+         "url": "https://stream.watsonplatform.net/speech-to-text/api/v1/models/ja-JP_BroadbandModel", 
+         "rate": 16000, 
+         "name": "ja-JP_BroadbandModel", 
+         "language": "ja-JP", 
+         "description": "日本語" // "Japanese broadband model (16KHz)"
+      }  
       //{
       //   "url": "https://stream.watsonplatform.net/speech-to-text/api/v1/models/ja-JP_NarrowbandModel", 
       //   "rate": 8000, 
@@ -930,6 +930,8 @@ function getVoice() {
 		voice = 'en-US_MichaelVoice'; // TODO: try 'en-US_AllisonVoice' or 'en-US_LisaVoice'
 	else if(mt_target == 'fr')
 		voice = 'fr-FR_ReneeVoice';
+  else if(mt_target == 'ja')
+    voice = 'ja-JP_EmiVoice';
 	else if(mt_target == 'es')
 		voice = 'es-US_SofiaVoice';   // TODO: try 'es-ES_EnriqueVoice' or 'es-ES_LauraVoice'
 	else if(mt_target == 'pt')
@@ -952,6 +954,8 @@ function getTargetLanguageCode() {
 	    mt_target = 'en';
 	else if( lang == 'French' )
 	    mt_target = 'fr';
+  else if( lang == 'Japanese' )
+      mt_target = 'ja';
 	else if( lang == 'Spanish' )
 	    mt_target = 'es';
 	else if( lang == 'Portuguese' )
@@ -1648,6 +1652,9 @@ exports.initSelectModel = function(ctx) {
 	else if(currentModel == 'ar-AR_BroadbandModel') { 
 		list.append("<li role='presentation'><a role='menuitem' tabindex='0'>English</a></li>");
 	}
+      else if(currentModel == 'ja-JP_BroadbandModel') { 
+             list.append("<li role='presentation'><a role='menuitem' tabindex='0'>English</a></li>");
+      }
 	else if(currentModel == 'es-ES_BroadbandModel') { 
 		list.append("<li role='presentation'><a role='menuitem' tabindex='0'>English</a></li>");
 	}
@@ -1671,6 +1678,7 @@ exports.initSelectModel = function(ctx) {
 	
 	// HACK: just for now because these 3 source languages have only 1 target language, which is English
 	if( newModel == "ar-AR_BroadbandModel" ||
+             newModel == "ja-JP_BroadbandModel" ||
 		newModel == "pt-BR_BroadbandModel" ||
 		newModel == "es-ES_BroadbandModel") {
 		$('#dropdownMenuTargetLanguageDefault').text("English");
