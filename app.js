@@ -26,6 +26,9 @@ var express = require('express'),
     // environmental variable points to demo's json config file
     extend = require('util')._extend;
 
+app.use(bodyParser.urlencoded({ extended: false }));
+
+
 //------Personality Insights------------
 var PersonalityInsightsV3 = require('watson-developer-cloud/personality-insights/v3');
 var personality_insights = new PersonalityInsightsV3({
@@ -79,12 +82,23 @@ app.get('/token', function(req, res) {
 
 app.post('/pi-analyze', function(req, res) {
  
-console.log("### Input BODY is: " + JSON.stringify(req.body));
-console.log("### Input Text is: " + req.body.text);
+// console.log("### Input BODY is: " + JSON.stringify(req.body));
+// console.log("### Input Text is: " + req.body.text);
+
+// S.T. 語数が120より少ない時、文章を繰り返しコピーして語数を増やす
+var wordCount = req.body.text.split(" ").length;
+var inputText = req.body.text;
+if(wordCount<120){
+    for (var i=0 ; i<120/wordCount+1 ; i++){
+        inputText = inputText + req.body.text;
+    }
+}
+
+// console.log("### Word count is: " + wordCount + ", Repeat is: " + 120/wordCount+1 + ", Input Text is:" + inputText);
 
 var contentItems = Array();
 contentItems[0] = {
-   "content": req.body.text, 
+   "content": inputText, 
    "contenttype": "text/plain", 
    "created": 1447639154000,
    "id": "666073008692314113",
@@ -122,7 +136,7 @@ personality_insights.profile(params, function(error, response) {
 
 // L.R.
 // ------------------------------- MT ---------------------------------
-app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.urlencoded({ extended: false })); // S.T.  29行目に移動
 
 var mt_credentials = extend({
   url: 'https://gateway.watsonplatform.net/language-translator/api', // S.T. 新Language Translator対応

@@ -885,7 +885,7 @@ var processString = function(baseString, isFinished) {
 
 }
 
-exports.showJSON = function(msg, baseJSON) {
+exports.showJSON = function(msg, baseJSON) {2
   
    var json = JSON.stringify(msg, null, 2);
     baseJSON += json;
@@ -1095,12 +1095,12 @@ function synthesizeRequest(text, v) {
             var resultId = $('#resultId');
             var statusId = $('#statusId');
             var text = $('#resultsText').val();
-            if (text.length >= 1) {  // テストのため変更120->1 S.T.
-                statusId.html('<p class="text-info">分析中です (遅いな？と思ったらNode-REDのdebugを確認してください。)・・・</p>');
+            if (text.length >= 1) {  // 語数制限を緩和。語数が少ない場合はサーバーアプリ側で増幅する。120->1 S.T.
+                statusId.html('<p class="text-info"> 分析中です (遅いな？と思ったらNode-REDのdebugを確認してください。)・・・</p>');
                 $.ajax({
                     "type": "POST",
                     "url": "/pi-analyze",
-                    data: {"text": text}
+                    "data": {"text": text}
                 }).done(function (value) {
                     chart.show(value, image);
                     statusId.append('<p class="text-info">・・・完了しました。</p>');
