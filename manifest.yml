@@ -20,8 +20,6 @@ applications:
   - language-translation-service
   - text-to-speech-service
   - Personality Insights-g2
-  - AlchemyAPI-0w
   - cloudant-s2rec
-  - dashdb-s2rec
   
   
