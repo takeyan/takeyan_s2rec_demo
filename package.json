@@ -4,6 +4,7 @@
   "description": "A sample browser application for Bluemix that use the speech-to-text, language-translation, and text-to-speech services",
   "dependencies": {
     "body-parser": "^1.13.2",
+    "cloudant": "^1.7.1",
     "connect": "~3.3.5",
     "errorhandler": "~1.2.4",
     "express": "~4.10.8",
@@ -39,8 +40,7 @@
     }
   ],
   "license": "Apache-2.0",
-  "bugs": {
-  },
+  "bugs": {},
   "scripts": {
     "start": "node app.js",
     "build": "browserify -o public/js/main.js src/index.js",

@@ -10,7 +10,7 @@ declared-services:
     label: text_to_speech
     plan: standard	
 applications:
-- name: takeyang-s2s
+- name: takeyang-s2rec
   command: node app.js
   buildpack: sdk-for-nodejs
   path: .
@@ -19,5 +19,9 @@ applications:
   - speech-to-text-service-standard
   - language-translation-service
   - text-to-speech-service
+  - Personality Insights-g2
+  - AlchemyAPI-0w
+  - cloudant-s2rec
+  - dashdb-s2rec
   
   

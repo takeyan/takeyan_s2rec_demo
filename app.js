@@ -26,6 +26,24 @@ var express = require('express'),
     // environmental variable points to demo's json config file
     extend = require('util')._extend;
 
+//-----S.T. Cloudant --------------
+var Cloudant = require("cloudant");
+var dbname = "minutes";
+
+if (typeof process.env.VCAP_SERVICES === 'undefined') {
+    credentials = require('./cloudant.json');
+    } else {
+    var services = JSON.parse(process.env.VCAP_SERVICES)
+    credentials = services['cloudantNoSQLDB'][0].credentials;
+    };
+var username = credentials.username;
+var password = credentials.password;
+var cloudant = Cloudant({account:username, password:password, plugin:'retry'});
+// cloudant.db.destroy(dbname);
+// cloudant.db.create(dbname);
+var s2srecdb = cloudant.db.use(dbname);
+//---------------------------------------
+
 app.use(bodyParser.urlencoded({ extended: false }));
 
 
@@ -173,7 +191,15 @@ app.post('/api/translate', function(req, res, next) {
     return next(err);
  } else {
 // console.log('##### models:'+JSON.stringify(models)); //S.T
+// console.log('##### translation:'+ models.translations[0].translation); //S.T
     res.json(models);
+
+//---S.T. Insert to Cloudant----------------------------
+var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation };
+// console.log("### Inserting to Cloudant: " + JSON.stringify(script));
+dbInsert(script);
+//---------------------------------------------------------------
+
 }    
   });
 });
@@ -205,6 +231,26 @@ app.get('/synthesize', function(req, res) {
 });
 
 // ----------------------------------------------------------------------
+
+//---S.T.---------------------------
+// Cloudantへのデータインサート用関数     
+var dbInsert = function(dt){
+    s2srecdb.insert(dt, function(err, body, header) {
+    if (err) {
+        console.log('### Error = ', err.message);
+        console.log('### payload = ' + dt);
+        }
+    });
+}
+
+// 日付フォーマット用関数
+function dateFmt(dt){
+    return dt.toISOString().replace(/T/," ").replace(/Z/,"");
+}
+//-----------------------------------
+
+
+
 
 // Add error handling in dev
 if (!process.env.VCAP_SERVICES) {
