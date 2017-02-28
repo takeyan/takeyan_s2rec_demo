@@ -106,7 +106,7 @@ app.get('/token', function(req, res) {
   });
 });
 
-//-----------Personality Insights----------------------------
+//-----------ブラウザからPersonality Insightsを呼び出す（サンバーストチャートの描画用）----------------------------
 
 app.post('/pi-analyze', function(req, res) {
  
@@ -155,7 +155,7 @@ personality_insights.profile(params, function(error, response) {
 );
 });
 
-//-------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
 
 
 
@@ -190,6 +190,10 @@ app.post('/api/translate', function(req, res, next) {
   // Language Translatorは、text: params.text,    source: 'ja',    target: 'en' という形式のJSONオブジェクトを引数とするので、
   // 翻訳方法の部分はmodel_idから先頭2バイトを抽出してsourceにセット、最初のハイフン直後の2バイト（オフセット3からオフセット5の手前まで）
   // を抽出してtargetにセットして使用する。
+  //
+  // 順次処理のため、Language Translatorのcallbackの中でAlchemy Languageを呼び、Alchemy Languageのcallbackの中でPersonality
+  // Insightsを呼び、Personality Insightsのcallbackの中でCloudantを呼んでいる。
+  //
   var src = params.model_id.substring(0,2);         // S.T. 新Language Translator対応
   var tgt = params.model_id.substring(3,5);          // S.T. 新Language Translator対応
   var params2 = {    text: params.text,    source: src,    target: tgt };         // S.T. 新Language Translator対応
@@ -206,7 +210,7 @@ app.post('/api/translate', function(req, res, next) {
 
 //---S.T. Call Alchemy Language-------------------
 var str;
-if (src === 'en') str = params.text;
+if (src === 'en') str = params2.text;
 else str = models.translations[0].translation;
 
 var alchemyParams = {
@@ -221,29 +225,59 @@ alchemyLanguage.keywords(alchemyParams, function(err, response) {
         return next('##### err in AL:' + err);
       }
       else {
-     //---S.T. Insert to Cloudant----------------------------
-     console.log("### Calling Alchemy API:" + str);
-      var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation, keywords:response };
-     console.log("### Inserting to Cloudant: " + JSON.stringify(script));
-     dbInsert(script);
+
+//---S.T. Personality Insights呼び出し用関数-------------------
+var dt1 = alchemyParams.text;
+// S.T. 語数が120より少ない時、文章を繰り返しコピーして語数を増やす
+var wordCount = dt1.split(" ").length;
+var inputText = dt1;
+if(wordCount<120){
+    for (var i=0 ; i<120/wordCount+1 ; i++){
+        inputText = inputText + dt1;
     }
-    //---------------------------------------------------------------
-//      return res.json(response);
-    });
+}
+// console.log("### Word count is: " + wordCount + ", Repeat is: " + 120/wordCount+1 + ", Input Text is:" + inputText);
+var contentItems = Array();
+contentItems[0] = {
+   "content": inputText, 
+   "contenttype": "text/plain", 
+   "created": 1447639154000,
+   "id": "666073008692314113",
+   "language": "en"
+ };
 
+var PIparams = {
+  content_items: contentItems,
+  consumption_preferences: true,
+  raw_scores: true,
+  headers: {
+    'accept-language': 'ja',
+    'accept': 'application/json'
+  }
+};
 
-
-//---------------------------------------------------------------
-
+personality_insights.profile(PIparams, function(error, PIresponse) {
+  if (error)
+    console.log('### Error:' + error);
+  else{
+    console.log('### PI response:' + JSON.stringify(PIresponse, null, 2));
 
 //---S.T. Insert to Cloudant----------------------------
-// var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation };
-// console.log("### Inserting to Cloudant: " + JSON.stringify(script));
-// dbInsert(script);
+        var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation, keywords:response, PI:PIresponse};
+       var PIonly = {_id:"PIonly", _rev:"1-fcf8c288988576ae0c23cede237d7857", PI:PIresponse};
+       console.log("### Inserting to Cloudant: " + JSON.stringify(script));
+       dbInsert(script);
+       dbUpdate(PIonly);
+     }
+});
 //---------------------------------------------------------------
 
-}    
-  });
+    }
+});
+//---------------------------------------------------------------
+
+   }    
+});
 });
 
 
@@ -274,9 +308,11 @@ app.get('/synthesize', function(req, res) {
 
 // ----------------------------------------------------------------------
 
+
 //---S.T.---------------------------
 // Cloudantへのデータインサート用関数     
 var dbInsert = function(dt){
+    console.log("### Calling Personality Insights:" + dt.script_a);
     s2srecdb.insert(dt, function(err, body, header) {
     if (err) {
         console.log('### Error = ', err.message);
@@ -284,6 +320,25 @@ var dbInsert = function(dt){
         }
     });
 }
+
+//---S.T.---------------------------
+// Cloudantへのアップデート用関数     
+var dbUpdate = function(dt){
+//    console.log("### Calling Personality Insights:" + dt.script_a);
+    s2srecdb.get(dt._id, {revs_info:true}, function(err, body, header) {
+    if (err) {
+        dbInsert(dt);
+        }
+     else {
+      dt._rev = body._rev;
+      console.log("### Updating Cloudant: " + JSON.stringify(dt));
+      s2srecdb.insert(dt, function(err, body) {
+            if (!err)   console.log("### Cloudant Updated: " + body);
+      });
+    }
+});
+}
+
 
 // 日付フォーマット用関数
 function dateFmt(dt){
