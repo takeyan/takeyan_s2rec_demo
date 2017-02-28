@@ -44,6 +44,15 @@ var cloudant = Cloudant({account:username, password:password, plugin:'retry'});
 var s2srecdb = cloudant.db.use(dbname);
 //---------------------------------------
 
+//-----S.T. Alchemy Language --------------
+// If no API Key is provided here, the watson-developer-cloud@2.x.x library will check for an ALCHEMY_LANGUAGE_API_KEY environment property and then fall back to the VCAP_SERVICES property provided by Bluemix.
+var alchemyLanguage = new watson.AlchemyLanguageV1({
+ api_key: "da89db9f55afbba8c98ba01551b6149a53840714"
+});
+//------------------------------------------------------
+
+
+
 app.use(bodyParser.urlencoded({ extended: false }));
 
 
@@ -89,7 +98,8 @@ app.use(express.static(path.join(__dirname , './public')));
 app.get('/token', function(req, res) {
   authorization.getToken({url: credentials.url}, function(err, token) {
     if (err) {
-      console.log('error:', err);
+      console.log('### error at getToken:', JSON.stringify(credentials));  //S.T.
+      console.log('### error at getToken:', err);
       res.status(err.code);
     }
     res.send(token);
@@ -187,17 +197,49 @@ app.post('/api/translate', function(req, res, next) {
 
   language_translation.translate(params2, function(err, models) {
   if (err) {
- console.log('##### err:'+err); //S.T
+ console.log('##### err in LT:'+err); //S.T
     return next(err);
  } else {
-// console.log('##### models:'+JSON.stringify(models)); //S.T
-// console.log('##### translation:'+ models.translations[0].translation); //S.T
+ console.log('##### models:'+JSON.stringify(models)); //S.T
+ console.log('##### translation:'+ models.translations[0].translation); //S.T
     res.json(models);
 
+//---S.T. Call Alchemy Language-------------------
+var str;
+if (src === 'en') str = params.text;
+else str = models.translations[0].translation;
+
+var alchemyParams = {
+  text:str,
+  knowledgeGraph:1,
+  emotion:1,
+  sentiment:1
+};
+
+alchemyLanguage.keywords(alchemyParams, function(err, response) {
+      if (err) {
+        return next('##### err in AL:' + err);
+      }
+      else {
+     //---S.T. Insert to Cloudant----------------------------
+     console.log("### Calling Alchemy API:" + str);
+      var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation, keywords:response };
+     console.log("### Inserting to Cloudant: " + JSON.stringify(script));
+     dbInsert(script);
+    }
+    //---------------------------------------------------------------
+//      return res.json(response);
+    });
+
+
+
+//---------------------------------------------------------------
+
+
 //---S.T. Insert to Cloudant----------------------------
-var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation };
+// var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation };
 // console.log("### Inserting to Cloudant: " + JSON.stringify(script));
-dbInsert(script);
+// dbInsert(script);
 //---------------------------------------------------------------
 
 }    
