@@ -264,7 +264,8 @@ personality_insights.profile(PIparams, function(error, PIresponse) {
 
 //---S.T. Insert to Cloudant----------------------------
         var script = {_id: (new Date()).toISOString(), lang_a: src, script_a: req.body.text, lang_b: tgt, script_b: models.translations[0].translation, keywords:response, PI:PIresponse};
-       var PIonly = {_id:"PIonly", _rev:"1-fcf8c288988576ae0c23cede237d7857", PI:PIresponse};
+ //      var PIonly = {_id:"PIonly", _rev:"1-fcf8c288988576ae0c23cede237d7857", PI:PIresponse};
+       var PIonly = {_id:"PIonly", PI:PIresponse};
        console.log("### Inserting to Cloudant: " + JSON.stringify(script));
        dbInsert(script);
        dbUpdate(PIonly);
